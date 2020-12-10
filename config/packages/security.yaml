@@ -1,0 +1,38 @@
+security:
+    encoders:
+        Symfony\Component\Security\Core\User\User: plaintext
+
+    # https://symfony.com/doc/current/security.html#where-do-users-come-from-user-providers
+    providers:
+        in_memory:
+            memory:
+                users:
+                    resourcespace:
+                        password: '%env(HTTP_PASSWORD)%'
+                        roles: 'ROLE_USER'
+    firewalls:
+        dev:
+            anonymous: true
+            lazy: true
+            provider: in_memory
+            http_basic:
+                realm: "ResourceSpace tools. Use username 'resourcespace'."
+        main:
+            anonymous: false
+            lazy: true
+            provider: in_memory
+            http_basic:
+                realm: "ResourceSpace Tools"
+
+            # activate different ways to authenticate
+            # https://symfony.com/doc/current/security.html#firewalls-authentication
+
+            # https://symfony.com/doc/current/security/impersonating_user.html
+            # switch_user: true
+
+    # Easy way to control access for large sections of your site
+    # Note: Only the *first* access control that matches will be used
+    access_control:
+        # - { path: ^/admin, roles: ROLE_ADMIN }
+        # - { path: ^/profile, roles: ROLE_USER }
+        - { path: '^/*', roles: 'ROLE_USER' }

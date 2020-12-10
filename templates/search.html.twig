@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+    <html>
+        <head>
+            <title>TMS File finder</title>
+            <link rel="stylesheet" href="styles.css">
+        </head>
+        <body>
+            <h1>Get resource path uit DAMS (ResourceSpace)</h1>
+            <p>Op basis van een zoekopdracht de juiste filePath(s) verkrijgen zodat die kunnen worden toegevoegd in TMS<br>
+            <ul><li>Voer een zoekopdracht in en klik op Query verzenden of enter</li>
+                <li>Resultaat is thumbnails van resources met die aan de zoekopdracht voldoen en hun bijhorende filePaths</li>
+                <li>Je kan de filename naar het klembord kopiëren door op de "copy" button te klikken.
+                    <br>Opgelet: soms valt het voor dat er geen 'screen' versie van het bestand beschikbaar is (check door op 'test' te klikken). Neem in dat geval de 'original'.
+                </li>
+                <li>Deze kan je dan plakken in TMS.</li>
+            </ul>
+            </p>
+            {{ form(form) }}
+            {% if search_results is defined %}
+                <table>
+                {% for result in search_results %}
+                    <tr>
+                        <td>
+                            <a target="_blank" href="https://museumstichting.resourcespace.com/?r={{ result.resource_id }}">
+                            <img src="{{ result.file_path_thumbnail }}" alt="" /></a></td>
+                        <td>
+                            Filename: {{ result.original_filename }}<br>
+                            Inventory number: {{  result.inventory_number }}<br>
+                            Resource ID: {{ result.resource_id }} <br>
+                        </td>
+                        <td>
+                            Creator: {{ result.creator }}<br>
+                            Artwork creator: {{ result.artwork_creator }}</td>
+                        <td>
+                            screen:
+                            <input type="text" size="90" value="{{ result.file_path_screen }}" id="screen_file_{{ result.resource_id }}">
+                            <a target="_blank" href="{{ result.file_path_screen }}">test</a><br>
+                            <button class="button" onclick="myFunction({{ result.resource_id }})">Copy text</button><br>
+                            original:
+                            <input type="text" size="90" value="{{ result.file_path_original }}" id="original_file">
+                            <a target="_blank" href="{{ result.file_path_original }}">test</a><br>
+                            <br>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </table>
+            {% endif %}
+        </body>
+        <script>
+            function myFunction(ref) {
+                document.getElementById("screen_file_" + ref).select();
+                document.execCommand("copy");
+            }
+        </script>
+</html>

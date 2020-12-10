@@ -1,0 +1,5 @@
+parameters:
+  resourcespace_api:
+    url: ''
+    username: ''
+    key: ''
