@@ -27,6 +27,7 @@ class TmsFileFinderController extends AbstractController
             ->add('submit', SubmitType::class, [ 'label' => 'Query verzenden' ])
             ->getForm();
         $form->handleRequest($request);
+
         $searchResults = array();
         if($form->isSubmitted() && $form->isValid()) {
             $search = $form->getData();
@@ -46,7 +47,7 @@ class TmsFileFinderController extends AbstractController
             }
         }
 
-        return $this->render('search.html.twig', [
+        return $this->render('finder.html.twig', [
             'form' => $form->createView(),
             'search_results' => $searchResults
         ]);
