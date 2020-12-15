@@ -52,7 +52,7 @@ class TmsFileFinderController extends AbstractController
                     'creator' => $result['field89'],
                     'artwork_creator' => $result['field96'],
                     'file_path_thumbnail' => $resourceSpace->getResourcePath($result['ref'], 'thm'),
-                    'file_path_screen' => $resourceSpace->getResourcePath($result['ref'], 'src'),
+                    'file_path_screen' => $resourceSpace->getResourcePath($result['ref'], 'scr'),
                     'file_path_original' => $resourceSpace->getResourcePath($result['ref'], ''),
                 );
             }
