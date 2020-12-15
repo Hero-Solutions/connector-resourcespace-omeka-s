@@ -24,7 +24,13 @@ class ResourceSpace
         return json_decode($data, true);
     }
 
-    public function getResourceThmUrl($id, $type)
+    public function searchGetPreviews($inventoryNumber, $previews)
+    {
+        $data = $this->doApiCall('do_search&param1=inventorynumber:' . $inventoryNumber . '&param8=' . $previews);
+        return json_decode($data, true);
+    }
+
+    public function getResourcePath($id, $type)
     {
         $data = $this->doApiCall('get_resource_path&param1=' . $id . '&param2=0&param3=' . $type);
         return json_decode($data, true);
