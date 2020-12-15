@@ -41,8 +41,6 @@ class TmsFileFinderController extends AbstractController
         if($form->isSubmitted() && $form->isValid()) {
             $search = $form->getData();
             $resourceSpace = new ResourceSpace($this->container->get('parameter_bag'));
-            $pending = $search->getPending();
-            var_dump($search);
             $results = $resourceSpace->findResourceWithId($search->getId(), $search->getPending());
             foreach($results as $result) {
                 $searchResults[] = array(
