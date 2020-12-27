@@ -22,7 +22,7 @@
                 <tr>
                     <td>
                         <a target="_blank" href="https://museumstichting.resourcespace.com/?r={{ result.resource_id }}">
-                        <img src="{{ result.file_path_thumbnail }}" alt="" /></a></td>
+                        <img src="{{ result.file_path_thumbnail }}" alt="https://museumstichting.resourcespace.com/?r={{ result.resource_id }}" /></a></td>
                     <td>
                         Filename: {{ result.original_filename }}<br>
                         Inventory number: {{  result.inventory_number }}<br>
@@ -33,13 +33,13 @@
                         Artwork creator: {{ result.artwork_creator }}</td>
                     <td>
                         screen:
-                        <input type="text" size="90" value="{{ result.file_path_screen }}" id="1_{{ result.resource_id }}">
-                        <a target="_blank" href="{{ result.file_path_screen }}">test</a><br>
-                        <button class="button" onclick="myFunction(1, {{ result.resource_id }})">Copy screen URL</button><br>
+                        <input type="text" size="130" value="{{ result.file_path_screen }}" id="1_{{ result.resource_id }}">
+                        {% if result.file_path_screen is not empty %}<a target="_blank" href="{{ result.file_path_screen }}">test</a><br>
+                        <button class="button" onclick="myFunction(1, {{ result.resource_id }})">Copy screen URL</button>{% endif %}<br>
                         original:
-                        <input type="text" size="90" value="{{ result.file_path_original }}" id="2_{{ result.resource_id }}">
-                        <a target="_blank" href="{{ result.file_path_original }}">test</a><br>
-                        <button class="button" onclick="myFunction(2, {{ result.resource_id }})">Copy original URL</button><br>
+                        <input type="text" size="130" value="{{ result.file_path_original }}" id="2_{{ result.resource_id }}">
+                        {% if result.file_path_original is not empty %}<a target="_blank" href="{{ result.file_path_original }}">test</a><br>
+                        <button class="button" onclick="myFunction(2, {{ result.resource_id }})">Copy original URL</button>{% endif %}<br>
                         <br>
                     </td>
                 </tr>

@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Omeka-S CSV import generator</title>
+        <link rel="stylesheet" href="styles.css">
+    </head>
+    <body>
+        <h1>Omeka-S CSV generator</h1>
+        <p>Genereer een CSV om in Omeka-S te importeren die ResourceSpace afbeeldingen bevat.<br>
+            Opgelet: het kan verschillende minuten duren eer dit een resultaat teruggeeft, afhankelijk van de grootte van de opgeladen CSV.<br>
+            Dit kan tot 5 minuten duren per 1000 records in het CSV-bestand.<br>
+            Per rij moet namelijk een ResourceSpace API call uitgevoerd worden.
+        </p>
+        {{ form(form) }}
+    </body>
+</html>

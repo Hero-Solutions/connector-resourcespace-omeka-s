@@ -20,19 +20,13 @@ class ResourceSpace
 
     public function findResourceWithId($id, $pendingReview)
     {
-        $data = $this->doApiCall('do_search&param1=' . $id . '&param4=' . $pendingReview);
+        $data = $this->doApiCall('do_search&param1=inventorynumber:' . $id . '&param4=' . $pendingReview);
         return json_decode($data, true);
     }
 
-    public function searchGetPreviews($inventoryNumber, $previews)
+    public function getResourcePath($id, $type, $extension = '')
     {
-        $data = $this->doApiCall('do_search&param1=inventorynumber:' . $inventoryNumber . '&param8=' . $previews);
-        return json_decode($data, true);
-    }
-
-    public function getResourcePath($id, $type)
-    {
-        $data = $this->doApiCall('get_resource_path&param1=' . $id . '&param2=0&param3=' . $type);
+        $data = $this->doApiCall('get_resource_path&param1=' . $id . '&param2=0&param3=' . $type . '&param5=' . $extension);
         return json_decode($data, true);
     }
 
