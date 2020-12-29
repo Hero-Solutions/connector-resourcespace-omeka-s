@@ -28,15 +28,6 @@ class TmsFileFinderController extends AbstractController
         $form = $this->createFormBuilder($search)
             ->add('input', TextType::class, [ 'label' => 'Zoekopdracht' ])
             ->add('field', ChoiceType::class, [ 'label' => 'Veld', 'choices' => array_merge(['Alle velden' => '@all_fields'], $params->get('tms_filefinder_fields'))])
-/*            ->add('pending', ChoiceType::class, [ 'choices' => [
-                    'Live (default)' => 0,
-                    'Pending archive' => 1,
-                    'Archived' => 2,
-                    'Deleted' => 3,
-                    'Pending review' => -1,
-                    'Pending submission' => -2
-                ]
-            ])*/
             ->add('submit', SubmitType::class, [ 'label' => 'Query verzenden' ])
             ->getForm();
         $form->handleRequest($request);
