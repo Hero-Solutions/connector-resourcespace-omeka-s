@@ -51,7 +51,6 @@ class TmsFileFinderController extends AbstractController
             } else {
                 $resources = $resourceSpace->findResource( $search->getField() . ':' . $search->getInput(), $pending);
             }
-            var_dump($resources);
             foreach($resources as $resource) {
                 $screenUrl = $resourceSpace->getResourcePath($resource['ref'], 'scr', 0);
                 $screenPath = '';
