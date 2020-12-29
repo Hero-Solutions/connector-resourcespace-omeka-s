@@ -4,26 +4,26 @@ namespace App\Entity;
 
 class Search
 {
-    protected $id;
-    protected $pending;
+    protected $input;
+    protected $field;
 
-    public function getId() : string
+    public function getInput() : string
     {
-        return $this->id;
+        return $this->input;
     }
 
-    public function setId($id)
+    public function setInput($input)
     {
-        $this->id = $id;
+        $this->input = $input;
     }
 
-    public function getPending() : string
+    public function getField() : string
     {
-        return $this->pending;
+        return $this->field;
     }
 
-    public function setPending($pending)
+    public function setField($field)
     {
-        $this->pending = $pending;
+        $this->field = $field;
     }
 }

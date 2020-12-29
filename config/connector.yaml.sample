@@ -3,3 +3,18 @@ parameters:
     url: ''
     username: ''
     key: ''
+
+  tms_filefinder_fields:
+    Inventarisnummer: inventorynumber
+    Titel: title
+    TMS Object ID: tmsobjectid
+    TMS Objectnummer: tmsobjectnumber
+    TMS Objectnaam: tmsobjectname
+
+  # 0 = live assets (the default)
+  # 1 = pending archive
+  # 2 = archived
+  # 3 = deleted
+  # -1 = pending review
+  # -2 = pending submission.
+  tms_filefinder_pending: '0,1,2,-1,-2'

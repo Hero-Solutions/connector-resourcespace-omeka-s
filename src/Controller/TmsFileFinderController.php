@@ -23,9 +23,11 @@ class TmsFileFinderController extends AbstractController
     public function new(Request $request) : Response
     {
         set_time_limit(0);
+        $params = $this->container->get('parameter_bag');
         $search = new Search();
         $form = $this->createFormBuilder($search)
-            ->add('id', TextType::class, [ 'label' => 'Zoekopdracht' ])
+            ->add('input', TextType::class, [ 'label' => 'Zoekopdracht' ])
+            ->add('field', ChoiceType::class, [ 'label' => 'Veld', 'choices' => array_merge(['Alle velden' => '@all_fields'], $params->get('tms_filefinder_fields'))])
 /*            ->add('pending', ChoiceType::class, [ 'choices' => [
                     'Live (default)' => 0,
                     'Pending archive' => 1,
@@ -42,32 +44,42 @@ class TmsFileFinderController extends AbstractController
         $searchResults = array();
         if($form->isSubmitted() && $form->isValid()) {
             $search = $form->getData();
-            $resourceSpace = new ResourceSpace($this->container->get('parameter_bag'));
-            $results = $resourceSpace->findResourceWithId($search->getId(), '0,1,2,3,-1,-2');
-//            $results = $resourceSpace->findResourceWithId($search->getId(), $search->getPending());
-            foreach($results as $result) {
-                $screenUrl = $resourceSpace->getResourcePath($result['ref'], 'scr');
+            $resourceSpace = new ResourceSpace($params);
+            $pending = $params->get('tms_filefinder_pending');
+            if($search->getField() == '@all_fields') {
+                $resources = $resourceSpace->findResource($search->getInput(), $pending);
+            } else {
+                $resources = $resourceSpace->findResource( $search->getField() . ':' . $search->getInput(), $pending);
+            }
+            var_dump($resources);
+            foreach($resources as $resource) {
+                $screenUrl = $resourceSpace->getResourcePath($resource['ref'], 'scr', 0);
+                $screenPath = '';
                 if(!empty($screenUrl)) {
                     if(!HttpUtil::urlExists($screenUrl)) {
                         $screenUrl = '';
+                    } else {
+                        $screenPath = substr($screenUrl, strpos($screenUrl, '/filestore'));
                     }
                 }
-                $originalUrl = $resourceSpace->getResourcePath($result['ref'], '', $result['file_extension']);
+                $originalUrl = $resourceSpace->getResourcePath($resource['ref'], '', 0, $resource['file_extension']);
+                $originalPath = '';
                 if(!empty($originalUrl)) {
                     if(!HttpUtil::urlExists($originalUrl)) {
                         $originalUrl = '';
+                    } else {
+                        $originalPath = substr($originalUrl, strpos($originalUrl, '/filestore'));
                     }
                 }
 
                 $searchResults[] = array(
-                    'resource_id' => $result['ref'],
-                    'original_filename' => $result['field51'],
-                    'inventory_number' => $result['field105'],
-                    'creator' => $result['field89'],
-                    'artwork_creator' => $result['field96'],
-                    'file_path_thumbnail' => $resourceSpace->getResourcePath($result['ref'], 'thm'),
-                    'file_path_screen' => $screenUrl,
-                    'file_path_original' => $originalUrl
+                    'resource_id' => $resource['ref'],
+                    'resource' => $resourceSpace->getResourceMetadata($resource['ref']),
+                    'file_path_thumbnail' => $resourceSpace->getResourcePath($resource['ref'], 'thm', 0),
+                    'file_url_screen' => $screenUrl,
+                    'file_path_screen' => $screenPath,
+                    'file_url_original' => $originalUrl,
+                    'file_path_original' => $originalPath
                 );
             }
         }

@@ -18,15 +18,36 @@ class ResourceSpace
         $this->apiKey = $resourceSpaceApi['key'];
     }
 
-    public function findResourceWithId($id, $pendingReview)
+    public function findResource($searchTerm, $pendingReview)
     {
-        $data = $this->doApiCall('do_search&param1=inventorynumber:' . $id . '&param4=' . $pendingReview);
+        $data = $this->doApiCall('do_search&param1=%22' . $searchTerm . '%22&param4=' . $pendingReview);
         return json_decode($data, true);
     }
 
-    public function getResourcePath($id, $type, $extension = '')
+    public function getResourceMetadata($ref)
     {
-        $data = $this->doApiCall('get_resource_path&param1=' . $id . '&param2=0&param3=' . $type . '&param5=' . $extension);
+        $rawResourceMetadata = $this->getRawResourceFieldData($ref);
+        return $this->getResourceFieldDataAsAssocArray($rawResourceMetadata);
+    }
+
+    public function getResourceFieldDataAsAssocArray($data)
+    {
+        $result = array();
+        foreach ($data as $field) {
+            $result[$field['name']] = $field['value'];
+        }
+        return $result;
+    }
+
+    public function getRawResourceFieldData($id)
+    {
+        $data = $this->doApiCall('get_resource_field_data&param1=' . $id);
+        return json_decode($data, true);
+    }
+
+    public function getResourcePath($id, $type, $filePath, $extension = '')
+    {
+        $data = $this->doApiCall('get_resource_path&param1=' . $id . '&param2=' . $filePath . '&param3=' . $type . '&param5=' . $extension);
         return json_decode($data, true);
     }
 

@@ -43,14 +43,16 @@ class OmekaSCsvController extends AbstractController
                     echo 'Wrong column count: should be ' . count($header) . ', is ' . count($row) . ' at row ' . $i . PHP_EOL;
                 }
                 $line = array_combine($header, $row);
-                $results = $resourceSpace->findResourceWithId(urlencode($line['identifier (MODS)']), '0');
+                $results = $resourceSpace->findResource(urlencode($line['identifier (MODS)']), '0');
                 $url = '';
                 foreach($results as $result) {
-                    $url = $resourceSpace->getResourcePath($result['ref'], 'scr');
+                    $url = $resourceSpace->getResourcePath($result['ref'], 0,'scr');
                     if(empty($url) || !HttpUtil::urlExists($url)) {
-                        $url = $resourceSpace->getResourcePath($result['ref'], '',  $result['file_extension']);
+                        $url = $resourceSpace->getResourcePath($result['ref'], '',  0, $result['file_extension']);
                     }
-                    break;
+                    if(!empty($url)) {
+                        break;
+                    }
                 }
                 $row[] = $url;
                 $records[] = $row;
