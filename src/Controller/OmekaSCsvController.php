@@ -46,7 +46,7 @@ class OmekaSCsvController extends AbstractController
                 $results = $resourceSpace->findResource(urlencode($line['identifier (MODS)']), '0');
                 $url = '';
                 foreach($results as $result) {
-                    $url = $resourceSpace->getResourcePath($result['ref'], 0,'scr');
+                    $url = $resourceSpace->getResourcePath($result['ref'], 'scr', 0);
                     if(empty($url) || !HttpUtil::urlExists($url)) {
                         $url = $resourceSpace->getResourcePath($result['ref'], '',  0, $result['file_extension']);
                     }
