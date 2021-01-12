@@ -11,6 +11,12 @@ parameters:
     TMS Objectnummer: tmsobjectnumber
     TMS Objectnaam: tmsobjectname
 
+  # OmekaSSCsvController will loop over these fields (top to bottom) until a match is found
+  # Only one of these columns need to be present in a CSV
+  omeka_s_csv_fields:
+    Identifier Group - Value: tmsobjectid
+    identifier (MODS): inventorynumber
+
   # 0 = live assets (the default)
   # 1 = pending archive
   # 2 = archived

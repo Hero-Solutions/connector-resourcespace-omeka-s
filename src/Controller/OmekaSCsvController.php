@@ -32,7 +32,9 @@ class OmekaSCsvController extends AbstractController
             $csvImport = $form->getData();
             $file = $csvImport->getFile();
 
-            $resourceSpace = new ResourceSpace($this->container->get('parameter_bag'));
+            $params = $this->container->get('parameter_bag');
+            $resourceSpace = new ResourceSpace($params);
+            $omekaSCsvFields = $params->get('omeka_s_csv_fields');
 
             $fh = fopen($file, 'r');
             $records = array();
@@ -43,18 +45,25 @@ class OmekaSCsvController extends AbstractController
                     echo 'Wrong column count: should be ' . count($header) . ', is ' . count($row) . ' at row ' . $i . PHP_EOL;
                 }
                 $line = array_combine($header, $row);
-                $results = $resourceSpace->findResource(urlencode($line['identifier (MODS)']), '0');
-                $url = '';
-                foreach($results as $result) {
-                    $url = $resourceSpace->getResourcePath($result['ref'], 'scr', 0);
-                    if(empty($url) || !HttpUtil::urlExists($url)) {
-                        $url = $resourceSpace->getResourcePath($result['ref'], '',  0, $result['file_extension']);
-                    }
-                    if(!empty($url)) {
-                        break;
+                $fileUrl = '';
+                foreach ($omekaSCsvFields as $columnName => $resourceSpaceName) {
+                    if(array_key_exists($columnName, $line)) {
+                        $results = $resourceSpace->findResource($resourceSpaceName . ':' . $line[$columnName], '0');
+                        foreach ($results as $result) {
+                            $fileUrl = $resourceSpace->getResourcePath($result['ref'], 'scr', 0);
+                            if (empty($fileUrl) || !HttpUtil::urlExists($fileUrl)) {
+                                $fileUrl = $resourceSpace->getResourcePath($result['ref'], '', 0, $result['file_extension']);
+                            }
+                            if (!empty($fileUrl)) {
+                                break;
+                            }
+                        }
+                        if (!empty($fileUrl)) {
+                            break;
+                        }
                     }
                 }
-                $row[] = $url;
+                $row[] = $fileUrl;
                 $records[] = $row;
                 $i++;
             }
