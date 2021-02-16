@@ -12,10 +12,10 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-class OmekaSCsvController extends AbstractController
+class ResourceSpaceCsvController extends AbstractController
 {
     /**
-     * @Route("/omeka-s_csv", name="Omeka-S CSV")
+     * @Route("/resourcespace_csv", name="ResourceSpace CSV")
      */
     public function new(Request $request) : Response
     {
