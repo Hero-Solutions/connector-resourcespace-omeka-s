@@ -6,6 +6,7 @@ use App\Entity\CsvImport;
 use App\ResourceSpace\ResourceSpace;
 use App\Util\HttpUtil;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\HttpFoundation\Request;
@@ -21,8 +22,10 @@ class ResourceSpaceCsvController extends AbstractController
     {
         set_time_limit(0);
         $csvImport = new CsvImport();
+        $params = $this->container->get('parameter_bag');
         $form = $this->createFormBuilder($csvImport)
-            ->add('file', FileType::class, [ 'label' => 'Omeka-S CSV importbestand' ])
+            ->add('imageType', ChoiceType::class, [ 'label' => 'Gewenst afbeeldingstype', 'choices' => $params->get('image_types') ])
+            ->add('file', FileType::class, [ 'label' => 'CSV importbestand' ])
             ->add('submit', SubmitType::class, [ 'label' => 'Query verzenden' ])
             ->getForm();
         $form->handleRequest($request);
@@ -31,8 +34,8 @@ class ResourceSpaceCsvController extends AbstractController
         if($form->isSubmitted() && $form->isValid()) {
             $csvImport = $form->getData();
             $file = $csvImport->getFile();
+            $imageType = $csvImport->getImageType();
 
-            $params = $this->container->get('parameter_bag');
             $resourceSpace = new ResourceSpace($params);
             $omekaSCsvFields = $params->get('omeka_s_csv_fields');
 
@@ -50,7 +53,7 @@ class ResourceSpaceCsvController extends AbstractController
                     if(array_key_exists($columnName, $line)) {
                         $results = $resourceSpace->findResource($resourceSpaceName . ':' . $line[$columnName], '0');
                         foreach ($results as $result) {
-                            $fileUrl = $resourceSpace->getResourcePath($result['ref'], 'scr', 0);
+                            $fileUrl = $resourceSpace->getResourcePath($result['ref'], $imageType, 0);
                             if (empty($fileUrl) || !HttpUtil::urlExists($fileUrl)) {
                                 $fileUrl = $resourceSpace->getResourcePath($result['ref'], '', 0, $result['file_extension']);
                             }

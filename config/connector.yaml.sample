@@ -4,6 +4,14 @@ parameters:
     username: ''
     key: ''
 
+  image_types:
+    hpr (High resolution print): hpr
+    lpr (Low resolution print): lpr
+    scr (Screen): scr
+    pre (Preview): pre
+    thm (Thumbnail): thm
+    thu (Thumbnail for Usage): thu
+
   tms_filefinder_fields:
     Inventarisnummer: inventorynumber
     Titel: title
