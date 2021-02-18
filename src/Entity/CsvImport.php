@@ -6,6 +6,8 @@ class CsvImport
 {
     protected $file;
     protected $imageType;
+    protected $extraColumns;
+    protected $imageCount;
 
     public function getFile()
     {
@@ -25,5 +27,25 @@ class CsvImport
     public function setImageType($imageType): void
     {
         $this->imageType = $imageType;
+    }
+
+    public function getExtraColumns()
+    {
+        return $this->extraColumns;
+    }
+
+    public function setExtraColumns($extraColumns): void
+    {
+        $this->extraColumns = $extraColumns;
+    }
+
+    public function getImageCount()
+    {
+        return $this->imageCount;
+    }
+
+    public function setImageCount($imageCount): void
+    {
+        $this->imageCount = $imageCount;
     }
 }

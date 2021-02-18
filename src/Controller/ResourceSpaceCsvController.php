@@ -6,8 +6,10 @@ use App\Entity\CsvImport;
 use App\ResourceSpace\ResourceSpace;
 use App\Util\HttpUtil;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
+use Symfony\Component\Form\Extension\Core\Type\RadioType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -25,6 +27,8 @@ class ResourceSpaceCsvController extends AbstractController
         $params = $this->container->get('parameter_bag');
         $form = $this->createFormBuilder($csvImport)
             ->add('imageType', ChoiceType::class, [ 'label' => 'Gewenst afbeeldingstype', 'choices' => $params->get('image_types') ])
+            ->add('extraColumns', ChoiceType::class, [ 'label' => 'Extra rij/kolom per afbeelding:', 'expanded' => true, 'multiple' => false, 'choices' => [ 'Extra rij' => false, 'Extra kolom' => true ]])
+            ->add('imageCount', ChoiceType::class, [ 'label' => false, 'expanded' => true, 'multiple' => true, 'choices' => [ 'Voeg aantal afbeeldingen toe aan CSV (label "Aantal afbeeldingen")' => true ]])
             ->add('file', FileType::class, [ 'label' => 'CSV importbestand' ])
             ->add('submit', SubmitType::class, [ 'label' => 'Query verzenden' ])
             ->getForm();
@@ -35,6 +39,8 @@ class ResourceSpaceCsvController extends AbstractController
             $csvImport = $form->getData();
             $file = $csvImport->getFile();
             $imageType = $csvImport->getImageType();
+            $extraColumns = $csvImport->getExtraColumns();
+            $imageCount = $csvImport->getImageCount();
 
             $resourceSpace = new ResourceSpace($params);
             $omekaSCsvFields = $params->get('omeka_s_csv_fields');
@@ -43,12 +49,13 @@ class ResourceSpaceCsvController extends AbstractController
             $records = array();
             $header = fgetcsv($fh, 8192);
             $i = 1;
+            $maxCount = 1;
             while(($row = fgetcsv($fh, 8192)) !== false) {
                 if(count($header) != count($row)) {
                     echo 'Wrong column count: should be ' . count($header) . ', is ' . count($row) . ' at row ' . $i . PHP_EOL;
                 }
                 $line = array_combine($header, $row);
-                $fileUrl = '';
+                $fileUrls = array();
                 foreach ($omekaSCsvFields as $columnName => $resourceSpaceName) {
                     if(array_key_exists($columnName, $line)) {
                         $results = $resourceSpace->findResource($resourceSpaceName . ':' . $line[$columnName], '0');
@@ -58,19 +65,45 @@ class ResourceSpaceCsvController extends AbstractController
                                 $fileUrl = $resourceSpace->getResourcePath($result['ref'], '', 0, $result['file_extension']);
                             }
                             if (!empty($fileUrl)) {
-                                break;
+                                $fileUrls[] = $fileUrl;
                             }
                         }
-                        if (!empty($fileUrl)) {
+                        if (!empty($results)) {
                             break;
                         }
                     }
                 }
-                $row[] = $fileUrl;
-                $records[] = $row;
+                if($imageCount) {
+                    $row[] = count($fileUrls);
+                }
+                if(empty($fileUrls)) {
+                    $row[] = '';
+                    $records[] = $row;
+                } else if(count($fileUrls) == 1) {
+                    $row[] = $fileUrls[0];
+                    $records[] = $row;
+                } else if($extraColumns) {
+                    if(count($fileUrls) > $maxCount) {
+                        $maxCount = count($fileUrls);
+                    }
+                    foreach ($fileUrls as $fileUrl) {
+                        $row[] = $fileUrl;
+                    }
+                    $records[] = $row;
+                } else {
+                    foreach ($fileUrls as $fileUrl) {
+                        $records[] = array_merge($row, array($fileUrl));
+                    }
+                }
                 $i++;
             }
+            if($imageCount) {
+                $header[] = 'Aantal afbeeldingen';
+            }
             $header[] = 'Media';
+            for($i = 0; $i < $maxCount - 1; $i++) {
+                $header[] = 'Media' . ($i + 2);
+            }
 
             $fp = fopen('php://temp', 'w');
             fputcsv($fp, $header);
