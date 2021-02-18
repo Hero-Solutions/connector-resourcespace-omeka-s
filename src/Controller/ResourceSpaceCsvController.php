@@ -26,7 +26,7 @@ class ResourceSpaceCsvController extends AbstractController
         $form = $this->createFormBuilder($csvImport)
             ->add('imageType', ChoiceType::class, [ 'label' => 'Gewenst afbeeldingstype', 'choices' => $params->get('image_types') ])
             ->add('extraColumns', ChoiceType::class, [ 'label' => 'Extra rij/kolom per afbeelding:', 'expanded' => true, 'multiple' => false, 'choices' => [ 'Extra rij' => false, 'Extra kolom' => true ]])
-            ->add('imageCount', ChoiceType::class, [ 'label' => false, 'expanded' => true, 'multiple' => true, 'choices' => [ 'Voeg aantal afbeeldingen toe aan CSV (label "Aantal afbeeldingen")' => true ]])
+            ->add('imageCount', ChoiceType::class, [ 'label' => false, 'expanded' => true, 'multiple' => true, 'choices' => [ 'Tel aantal resultaten (label "Number of images")' => true ]])
             ->add('file', FileType::class, [ 'label' => 'CSV importbestand' ])
             ->add('submit', SubmitType::class, [ 'label' => 'Query verzenden' ])
             ->getForm();
@@ -96,7 +96,7 @@ class ResourceSpaceCsvController extends AbstractController
                 $i++;
             }
             if($imageCount) {
-                $header[] = 'Aantal afbeeldingen';
+                $header[] = 'Number of images';
             }
             $header[] = 'Media';
             for($i = 0; $i < $maxCount - 1; $i++) {
