@@ -12,6 +12,10 @@ parameters:
     thm (Thumbnail): thm
     thu (Thumbnail for Usage): thu
 
+  csv_fields:
+    Vervaardiger: creator
+    Licentie: license
+
   tms_filefinder_fields:
     Inventarisnummer: inventorynumber
     Titel: title

@@ -26,7 +26,8 @@ class ResourceSpaceCsvController extends AbstractController
         $form = $this->createFormBuilder($csvImport)
             ->add('imageType', ChoiceType::class, [ 'label' => 'Gewenst afbeeldingstype', 'choices' => $params->get('image_types') ])
             ->add('extraColumns', ChoiceType::class, [ 'label' => 'Extra rij/kolom per afbeelding:', 'expanded' => true, 'multiple' => false, 'choices' => [ 'Extra rij' => false, 'Extra kolom' => true ]])
-            ->add('imageCount', ChoiceType::class, [ 'label' => false, 'expanded' => true, 'multiple' => true, 'choices' => [ 'Tel aantal resultaten (label "Number of images")' => true ]])
+            ->add('imageCount', ChoiceType::class, [ 'label' => false, 'expanded' => true, 'multiple' => true, 'choices' => [ 'Tel aantal resultaten (label "Matches")' => true ]])
+            ->add('extraInfo', ChoiceType::class, [ 'label' => 'Voeg extra ResourceSpace velden toe:', 'expanded' => true, 'multiple' => true, 'choices' => array_merge(['ResourceSpace ID' => 'resourcespace_id'], $params->get('csv_fields'))])
             ->add('file', FileType::class, [ 'label' => 'CSV importbestand' ])
             ->add('submit', SubmitType::class, [ 'label' => 'Query verzenden' ])
             ->getForm();
@@ -39,7 +40,7 @@ class ResourceSpaceCsvController extends AbstractController
             $imageType = $csvImport->getImageType();
             $extraColumns = $csvImport->getExtraColumns();
             $imageCount = $csvImport->getImageCount();
-
+            $extraInfo = $csvImport->getExtraInfo();
             $resourceSpace = new ResourceSpace($params);
             $omekaSCsvFields = $params->get('omeka_s_csv_fields');
 
@@ -54,16 +55,36 @@ class ResourceSpaceCsvController extends AbstractController
                 }
                 $line = array_combine($header, $row);
                 $fileUrls = array();
+                $metadata = array();
                 foreach ($omekaSCsvFields as $columnName => $resourceSpaceName) {
                     if(array_key_exists($columnName, $line)) {
                         $results = $resourceSpace->findResource($resourceSpaceName . ':' . $line[$columnName], '0');
                         foreach ($results as $result) {
+                            $data = array();
+                            $resourceData = null;
+                            foreach($extraInfo as $field) {
+                                if($field == 'resourcespace_id') {
+                                    $data[$field] = $result['ref'];
+                                } else {
+                                    if($resourceData == null) {
+                                        $resourceData = $resourceSpace->getResourceMetadata($result['ref']);
+                                    }
+                                    if (array_key_exists($field, $resourceData)) {
+                                        $data[$field] = $resourceData[$field];
+                                    } else {
+                                        $data[$field] = '';
+                                    }
+                                }
+                            }
+                            $metadata[] = $data;
                             $fileUrl = $resourceSpace->getResourcePath($result['ref'], $imageType, 0);
                             if (empty($fileUrl) || !HttpUtil::urlExists($fileUrl)) {
                                 $fileUrl = $resourceSpace->getResourcePath($result['ref'], '', 0, $result['file_extension']);
                             }
                             if (!empty($fileUrl)) {
                                 $fileUrls[] = $fileUrl;
+                            } else {
+                                $fileUrls[] = '';
                             }
                         }
                         if (!empty($results)) {
@@ -75,32 +96,68 @@ class ResourceSpaceCsvController extends AbstractController
                     $row[] = count($fileUrls);
                 }
                 if(empty($fileUrls)) {
+                    foreach($extraInfo as $field) {
+                        $row[] = '';
+                    }
                     $row[] = '';
                     $records[] = $row;
                 } else if(count($fileUrls) == 1) {
+                    foreach($extraInfo as $field) {
+                        if(array_key_exists($field, $metadata[0])) {
+                            $row[] = $metadata[0][$field];
+                        } else {
+                            $row[] = '';
+                        }
+                    }
                     $row[] = $fileUrls[0];
                     $records[] = $row;
                 } else if($extraColumns) {
                     if(count($fileUrls) > $maxCount) {
                         $maxCount = count($fileUrls);
                     }
+                    foreach($extraInfo as $field) {
+                        if(array_key_exists($field, $metadata[0])) {
+                            $row[] = $metadata[0][$field];
+                        } else {
+                            $row[] = '';
+                        }
+                    }
                     foreach ($fileUrls as $fileUrl) {
                         $row[] = $fileUrl;
                     }
                     $records[] = $row;
                 } else {
-                    foreach ($fileUrls as $fileUrl) {
-                        $records[] = array_merge($row, array($fileUrl));
+                    for ($i = 0; $i < count($fileUrls); $i++) {
+                        $arr = array();
+                        foreach($extraInfo as $field) {
+                            if(array_key_exists($field, $metadata[$i])) {
+                                $arr[] = $metadata[$i][$field];
+                            } else {
+                                $arr[] = '';
+                            }
+                        }
+                        $arr[] = $fileUrls[$i];
+                        $records[] = array_merge($row, $arr);
                     }
                 }
                 $i++;
             }
             if($imageCount) {
-                $header[] = 'Number of images';
+                $header[] = 'Matches';
+            }
+            if(in_array('resourcespace_id', $extraInfo)) {
+                $header[] = 'ResourceSpace ID';
+            }
+            foreach($params->get('csv_fields') as $key => $value) {
+                if(in_array($value, $extraInfo)) {
+                    $header[] = $key;
+                }
             }
             $header[] = 'Media';
-            for($i = 0; $i < $maxCount - 1; $i++) {
-                $header[] = 'Media' . ($i + 2);
+            if($extraColumns) {
+                for ($i = 0; $i < $maxCount - 1; $i++) {
+                    $header[] = 'Media' . ($i + 2);
+                }
             }
 
             $fp = fopen('php://temp', 'w');
