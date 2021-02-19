@@ -29,7 +29,7 @@ class ResourceSpaceCsvController extends AbstractController
             ->add('imageCount', ChoiceType::class, [ 'label' => false, 'expanded' => true, 'multiple' => true, 'choices' => [ 'Tel aantal resultaten (label "Matches")' => true ]])
             ->add('extraInfo', ChoiceType::class, [ 'label' => 'Voeg extra ResourceSpace velden toe:', 'expanded' => true, 'multiple' => true, 'choices' => array_merge(['ResourceSpace ID' => 'resourcespace_id'], $params->get('csv_fields'))])
             ->add('file', FileType::class, [ 'label' => 'CSV importbestand' ])
-            ->add('submit', SubmitType::class, [ 'label' => 'Query verzenden' ])
+            ->add('submit', SubmitType::class, [ 'label' => 'Query verzenden', 'attr' => [ 'onClick' => 'saveCookie()'] ])
             ->getForm();
         $form->handleRequest($request);
 
