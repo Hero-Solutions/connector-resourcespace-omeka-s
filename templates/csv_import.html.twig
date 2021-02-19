@@ -17,10 +17,67 @@
 </html>
 <script>
     function loadCookie() {
+        var val  = getCookie("imageType");
+        if(val != null) {
+            document.getElementById("form_imageType").value = val;
+        }
 
+        var extraColumns = document.getElementById("form_extraColumns");
+        var inputs = extraColumns.getElementsByTagName("input");
+        for (var i = 0; i < inputs.length; i++) {
+            val  = getCookie("extraColumns_" + i);
+            if(val != null) {
+                document.getElementById("form_extraColumns_" + i).checked = (val === "true");
+            }
+        }
+
+        val  = getCookie("imageCount");
+        if(val != null) {
+            document.getElementById("form_imageCount_0").checked = (val === "true");
+        }
+
+        var extraInfo = document.getElementById("form_extraInfo");
+        inputs = extraInfo.getElementsByTagName("input");
+        for (i = 0; i < inputs.length; i++) {
+            val = getCookie("extraInfo_" + i);
+            if(val != null) {
+                document.getElementById("form_extraInfo_" + i).checked = (val === "true");
+            }
+        }
     }
 
     function saveCookie() {
+        var val = document.getElementById("form_imageType").value;
+        document.cookie = "imageType=" + val;
 
+        var extraColumns = document.getElementById("form_extraColumns");
+        var inputs = extraColumns.getElementsByTagName("input");
+        for (var i = 0; i < inputs.length; i++) {
+            document.cookie = "extraColumns_" + i + "=" + inputs[i].checked;
+        }
+
+        val = document.getElementById("form_imageCount_0").checked;
+        document.cookie = "imageCount=" + val;
+
+        var extraInfo = document.getElementById("form_extraInfo");
+        inputs = extraInfo.getElementsByTagName("input");
+        for (i = 0; i < inputs.length; i++) {
+            document.cookie = "extraInfo_" + i + "=" + inputs[i].checked;
+        }
+    }
+
+    function getCookie(cname) {
+        var name = cname + "=";
+        var ca = document.cookie.split(';');
+        for(var i = 0; i < ca.length; i++) {
+            var c = ca[i];
+            while (c.charAt(0) == ' ') {
+                c = c.substring(1);
+            }
+            if (c.indexOf(name) == 0) {
+                return c.substring(name.length, c.length);
+            }
+        }
+        return "";
     }
 </script>
