@@ -21,7 +21,6 @@ class ResourceSpace
     public function findResource($searchTerm, $pendingReview)
     {
         $data = $this->doApiCall("do_search&search=%22" . urlencode($searchTerm) . "%22&archive=" . urlencode($pendingReview));
-        var_dump($data);
         return json_decode($data, true);
     }
 
