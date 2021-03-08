@@ -40,7 +40,7 @@ class TmsFileFinderController extends AbstractController
             if($search->getField() == '@all_fields') {
                 $resources = $resourceSpace->findResource($search->getInput(), $pending);
             } else {
-                $resources = $resourceSpace->findResource( $search->getField() . ':' . $search->getInput(), $pending);
+                $resources = $resourceSpace->findResource($search->getField() . ':' . $search->getInput(), $pending);
             }
             foreach($resources as $resource) {
                 $screenUrl = $resourceSpace->getResourcePath($resource['ref'], 'scr', 0);

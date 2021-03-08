@@ -20,7 +20,8 @@ class ResourceSpace
 
     public function findResource($searchTerm, $pendingReview)
     {
-        $data = $this->doApiCall('do_search&param1=%22' . $searchTerm . '%22&param4=' . $pendingReview);
+        $data = $this->doApiCall("do_search&search=%22" . urlencode($searchTerm) . "%22&archive=" . urlencode($pendingReview));
+        var_dump($data);
         return json_decode($data, true);
     }
 
@@ -53,8 +54,8 @@ class ResourceSpace
 
     private function doApiCall($query)
     {
-        $query = 'user=' . $this->apiUsername . '&function=' . $query;
-        $url = $this->apiUrl . '?' . $query . '&sign=' . $this->getSign($query);
+        $query = "user=" . $this->apiUsername . "&function=" . $query;
+        $url = $this->apiUrl . "?" . $query . "&sign=" . $this->getSign($query);
         $data = file_get_contents($url);
         return $data;
     }
