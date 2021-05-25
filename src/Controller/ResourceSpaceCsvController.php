@@ -58,37 +58,39 @@ class ResourceSpaceCsvController extends AbstractController
                 $metadata = array();
                 foreach ($omekaSCsvFields as $columnName => $resourceSpaceName) {
                     if(array_key_exists($columnName, $line)) {
-                        $results = $resourceSpace->findResource($resourceSpaceName . ':' . $line[$columnName], '0');
-                        foreach ($results as $result) {
-                            $data = array();
-                            $resourceData = null;
-                            foreach($extraInfo as $field) {
-                                if($field == 'resourcespace_id') {
-                                    $data[$field] = $result['ref'];
-                                } else {
-                                    if($resourceData == null) {
-                                        $resourceData = $resourceSpace->getResourceMetadata($result['ref']);
-                                    }
-                                    if (array_key_exists($field, $resourceData)) {
-                                        $data[$field] = $resourceData[$field];
+                        if(!empty($line[$columnName])) {
+                            $results = $resourceSpace->findResource($resourceSpaceName . ':' . $line[$columnName], '0');
+                            foreach ($results as $result) {
+                                $data = array();
+                                $resourceData = null;
+                                foreach ($extraInfo as $field) {
+                                    if ($field == 'resourcespace_id') {
+                                        $data[$field] = $result['ref'];
                                     } else {
-                                        $data[$field] = '';
+                                        if ($resourceData == null) {
+                                            $resourceData = $resourceSpace->getResourceMetadata($result['ref']);
+                                        }
+                                        if (array_key_exists($field, $resourceData)) {
+                                            $data[$field] = $resourceData[$field];
+                                        } else {
+                                            $data[$field] = '';
+                                        }
                                     }
                                 }
+                                $metadata[] = $data;
+                                $fileUrl = $resourceSpace->getResourcePath($result['ref'], $imageType, 0);
+                                if (empty($fileUrl) || !HttpUtil::urlExists($fileUrl)) {
+                                    $fileUrl = $resourceSpace->getResourcePath($result['ref'], '', 0, $result['file_extension']);
+                                }
+                                if (!empty($fileUrl)) {
+                                    $fileUrls[] = $fileUrl;
+                                } else {
+                                    $fileUrls[] = '';
+                                }
                             }
-                            $metadata[] = $data;
-                            $fileUrl = $resourceSpace->getResourcePath($result['ref'], $imageType, 0);
-                            if (empty($fileUrl) || !HttpUtil::urlExists($fileUrl)) {
-                                $fileUrl = $resourceSpace->getResourcePath($result['ref'], '', 0, $result['file_extension']);
+                            if (!empty($results)) {
+                                break;
                             }
-                            if (!empty($fileUrl)) {
-                                $fileUrls[] = $fileUrl;
-                            } else {
-                                $fileUrls[] = '';
-                            }
-                        }
-                        if (!empty($results)) {
-                            break;
                         }
                     }
                 }

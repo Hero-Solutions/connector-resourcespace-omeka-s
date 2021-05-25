@@ -37,40 +37,43 @@ class TmsFileFinderController extends AbstractController
             $search = $form->getData();
             $resourceSpace = new ResourceSpace($params);
             $pending = $params->get('tms_filefinder_pending');
-            if($search->getField() == '@all_fields') {
-                $resources = $resourceSpace->findResource($search->getInput(), $pending);
-            } else {
-                $resources = $resourceSpace->findResource($search->getField() . ':' . $search->getInput(), $pending);
-            }
-            foreach($resources as $resource) {
-                $screenUrl = $resourceSpace->getResourcePath($resource['ref'], 'scr', 0);
-                $screenPath = '';
-                if(!empty($screenUrl)) {
-                    if(!HttpUtil::urlExists($screenUrl)) {
-                        $screenUrl = '';
-                    } else {
-                        $screenPath = substr($screenUrl, strpos($screenUrl, '/filestore'));
-                    }
+            $resources = arra();
+            if(!empty($search->getInput())) {
+                if ($search->getField() == '@all_fields') {
+                    $resources = $resourceSpace->findResource($search->getInput(), $pending);
+                } else {
+                    $resources = $resourceSpace->findResource($search->getField() . ':' . $search->getInput(), $pending);
                 }
-                $originalUrl = $resourceSpace->getResourcePath($resource['ref'], '', 0, $resource['file_extension']);
-                $originalPath = '';
-                if(!empty($originalUrl)) {
-                    if(!HttpUtil::urlExists($originalUrl)) {
-                        $originalUrl = '';
-                    } else {
-                        $originalPath = substr($originalUrl, strpos($originalUrl, '/filestore'));
+                foreach ($resources as $resource) {
+                    $screenUrl = $resourceSpace->getResourcePath($resource['ref'], 'scr', 0);
+                    $screenPath = '';
+                    if (!empty($screenUrl)) {
+                        if (!HttpUtil::urlExists($screenUrl)) {
+                            $screenUrl = '';
+                        } else {
+                            $screenPath = substr($screenUrl, strpos($screenUrl, '/filestore'));
+                        }
                     }
-                }
+                    $originalUrl = $resourceSpace->getResourcePath($resource['ref'], '', 0, $resource['file_extension']);
+                    $originalPath = '';
+                    if (!empty($originalUrl)) {
+                        if (!HttpUtil::urlExists($originalUrl)) {
+                            $originalUrl = '';
+                        } else {
+                            $originalPath = substr($originalUrl, strpos($originalUrl, '/filestore'));
+                        }
+                    }
 
-                $searchResults[] = array(
-                    'resource_id' => $resource['ref'],
-                    'resource' => $resourceSpace->getResourceMetadata($resource['ref']),
-                    'file_path_thumbnail' => $resourceSpace->getResourcePath($resource['ref'], 'thm', 0),
-                    'file_url_screen' => $screenUrl,
-                    'file_path_screen' => $screenPath,
-                    'file_url_original' => $originalUrl,
-                    'file_path_original' => $originalPath
-                );
+                    $searchResults[] = array(
+                        'resource_id' => $resource['ref'],
+                        'resource' => $resourceSpace->getResourceMetadata($resource['ref']),
+                        'file_path_thumbnail' => $resourceSpace->getResourcePath($resource['ref'], 'thm', 0),
+                        'file_url_screen' => $screenUrl,
+                        'file_path_screen' => $screenPath,
+                        'file_url_original' => $originalUrl,
+                        'file_path_original' => $originalPath
+                    );
+                }
             }
         }
 
