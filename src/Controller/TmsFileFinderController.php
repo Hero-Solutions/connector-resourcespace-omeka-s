@@ -37,7 +37,7 @@ class TmsFileFinderController extends AbstractController
             $search = $form->getData();
             $resourceSpace = new ResourceSpace($params);
             $pending = $params->get('tms_filefinder_pending');
-            $resources = arra();
+            $resources = array();
             if(!empty($search->getInput())) {
                 if ($search->getField() == '@all_fields') {
                     $resources = $resourceSpace->findResource($search->getInput(), $pending);
