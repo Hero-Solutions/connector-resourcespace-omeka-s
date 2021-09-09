@@ -36,3 +36,8 @@ parameters:
   # -1 = pending review
   # -2 = pending submission.
   tms_filefinder_pending: '0,1,2,-1,-2'
+
+  # How many results are allowed per search query before showing a confirmation button (in tms_filefinder)
+  filefinder_max_results: 1000
+  # How many results are allowed per search query before omitting this search in the CSV tool
+  csv_max_results: 100

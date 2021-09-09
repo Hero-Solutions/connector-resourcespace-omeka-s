@@ -18,6 +18,26 @@ class ResourceSpace
         $this->apiKey = $resourceSpaceApi['key'];
     }
 
+    public function getApiUsername()
+    {
+        return $this->apiUsername;
+    }
+
+    public function setApiUsername($apiUsername)
+    {
+        $this->apiUsername = $apiUsername;
+    }
+
+    public function getApiKey()
+    {
+        return $this->apiKey;
+    }
+
+    public function setApiKey($apiKey)
+    {
+        $this->apiKey = $apiKey;
+    }
+
     public function findResource($searchTerm, $pendingReview)
     {
         $data = $this->doApiCall("do_search&search=%22" . urlencode($searchTerm) . "%22&archive=" . urlencode($pendingReview));

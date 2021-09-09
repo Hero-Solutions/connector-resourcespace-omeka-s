@@ -1,38 +1,121 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Omeka-S CSV import generator</title>
+        <title>ResourceSpace CSV import generator</title>
         <link rel="stylesheet" href="styles.css">
     </head>
     <body onLoad="loadCookie()">
-        <h1>Omeka-S CSV generator</h1>
+        <h1>ResourceSpace CSV generator</h1>
         <hr>
         <p>Genereer een CSV om in Omeka-S te importeren die ResourceSpace afbeeldingen bevat.<br>
             Opgelet: het kan verschillende minuten duren eer dit een resultaat teruggeeft, afhankelijk van de grootte van de opgeladen CSV.<br>
             Dit kan tot 5 minuten duren per 1000 records in het CSV-bestand.<br>
             Per rij moet namelijk een ResourceSpace API call uitgevoerd worden.
         </p>
+        <p>Gebruikte CSV headers om zoekopdrachten uit te voeren in ResourceSpace:</p>
+        <div style="width: 300px">
+            <div style="display: inline-block; width: 50%">CSV Header</div><div style="display: inline-block; width: 50%">ResourceSpace veld</div>
+        </div>
         {{ form(form) }}
     </body>
 </html>
 <script>
+
+    var form = document.getElementById('form');
+
+    var addFieldButton = document.createElement('button');
+    addFieldButton.type = "button";
+    addFieldButton.textContent = "+";
+    addFieldButton.onclick = function() {
+        var id = 100;
+        if('custom_id' in window) {
+            id = window.custom_id + 1;
+        }
+        window.custom_id = id;
+
+        var newCheckbox = document.createElement('input');
+        newCheckbox.type = "checkbox";
+        newCheckbox.name = "extraInfo_custom_" + id;
+        newCheckbox.id = newCheckbox.name;
+        newCheckbox.checked = true;
+        document.getElementById('form_extraInfo').insertBefore(newCheckbox, addFieldButton);
+
+        var newCheckboxName = document.createElement('input');
+        newCheckboxName.type = "text";
+        newCheckboxName.name = "extraInfo_custom_" + id + "_name";
+        newCheckboxName.id = newCheckboxName.name;
+        document.getElementById('form_extraInfo').insertBefore(newCheckboxName, addFieldButton);
+    };
+    document.getElementById('form_extraInfo').appendChild(addFieldButton);
+
+    var div = null;
+    var headerInput = null;
+    var fieldInput = null;
+    window.header_id = 0;
+    {% for header, field in match_headers %}
+        div = document.createElement('div');
+
+        headerInput = document.createElement('input');
+        headerInput.type = "text";
+        headerInput.value = "{{ header }}";
+        headerInput.name = "match_csv_header_" + window.header_id;
+        headerInput.id = headerInput.name;
+        div.appendChild(headerInput);
+
+        fieldInput = document.createElement('input');
+        fieldInput.type = "text";
+        fieldInput.value = "{{ field }}";
+        fieldInput.name = "match_csv_field_" + window.header_id;
+        fieldInput.id = fieldInput.name;
+        div.appendChild(fieldInput);
+
+        window.header_id = window.header_id + 1;
+
+        document.getElementById('resourcespace_csv_form').insertBefore(div, form);
+    {% endfor %}
+
+    var addHeaderButton = document.createElement('button');
+    addHeaderButton.type = "button";
+    addHeaderButton.textContent = "+";
+    addHeaderButton.onclick = function() {
+        div = document.createElement('div');
+
+        var newHeader = document.createElement('input');
+        newHeader.type = "text";
+        newHeader.name = "match_csv_header_" + window.header_id;
+        newHeader.id = newHeader.name;
+        div.appendChild(newHeader);
+
+        var newField = document.createElement('input');
+        newField.type = "text";
+        newField.name = "match_csv_field_" + window.header_id;
+        newField.id = newField.name;
+        div.appendChild(newField);
+
+        window.header_id = window.header_id + 1;
+
+        document.getElementById('resourcespace_csv_form').insertBefore(div, addHeaderButton);
+    };
+    document.getElementById('resourcespace_csv_form').insertBefore(addHeaderButton, form);
+
     function loadCookie() {
-        var val  = getCookie("imageType");
-        if(val != null) {
+        var val = getCookie("imageType");
+        var val1 = null;
+        if (val != null) {
             document.getElementById("form_imageType").value = val;
         }
 
         var extraColumns = document.getElementById("form_extraColumns");
         var inputs = extraColumns.getElementsByTagName("input");
         for (var i = 0; i < inputs.length; i++) {
-            val  = getCookie("extraColumns_" + i);
-            if(val != null) {
+            val = getCookie("extraColumns_" + i);
+            if (val != null) {
                 document.getElementById("form_extraColumns_" + i).checked = (val === "true");
             }
         }
 
-        val  = getCookie("imageCount");
-        if(val != null) {
+        val = getCookie("imageCount");
+        if (val != null) {
             document.getElementById("form_imageCount_0").checked = (val === "true");
         }
 
@@ -40,9 +123,86 @@
         inputs = extraInfo.getElementsByTagName("input");
         for (i = 0; i < inputs.length; i++) {
             val = getCookie("extraInfo_" + i);
-            if(val != null) {
+            if (val != null) {
                 document.getElementById("form_extraInfo_" + i).checked = (val === "true");
             }
+        }
+
+        i = 100;
+        while(true) {
+            val = getCookie("extraInfo_" + i + "_name");
+            if (val != null && val != "") {
+                val1 = getCookie("extraInfo_" + i);
+                if (val1 != null) {
+                    var highestId = 100;
+                    if ('custom_id' in window) {
+                        var id = window.custom_id;
+                        if (id > highestId) {
+                            highestId = id;
+                        }
+                    }
+                    window.custom_id = highestId;
+
+                    var newCheckbox = document.createElement('input');
+                    newCheckbox.type = "checkbox";
+                    newCheckbox.name = "extraInfo_custom_" + i;
+                    newCheckbox.id = newCheckbox.name;
+                    newCheckbox.checked = (val1 === "true");
+                    document.getElementById('form_extraInfo').insertBefore(newCheckbox, addFieldButton);
+
+                    var newCheckboxName = document.createElement('input');
+                    newCheckboxName.type = "text";
+                    newCheckboxName.name = "extraInfo_custom_" + i + "_name";
+                    newCheckboxName.value = val;
+                    newCheckboxName.id = newCheckboxName.name;
+                    document.getElementById('form_extraInfo').insertBefore(newCheckboxName, addFieldButton);
+                }
+            } else {
+                break;
+            }
+            i++;
+        }
+
+        i = 0;
+        while(true) {
+            val = getCookie("match_csv_header_" + i);
+            if (val != null && val != "") {
+                val1 = getCookie("match_csv_field_" + i);
+                if (val1 != null && val1 != "") {
+
+                    var headerInput = document.getElementById('match_csv_header_' + i);
+                    var fieldInput = document.getElementById('match_csv_field_' + i);
+                    if(headerInput != null && fieldInput != null) {
+                        headerInput.value = val;
+                        fieldInput.value = val1;
+                    } else {
+                        div = document.createElement('div');
+
+                        var newHeader = document.createElement('input');
+                        newHeader.type = "text";
+                        newHeader.name = "match_csv_header_" + i;
+                        newHeader.id = newHeader.name;
+                        newHeader.value = val;
+                        div.appendChild(newHeader);
+
+                        var newField = document.createElement('input');
+                        newField.type = "text";
+                        newField.name = "match_csv_field_" + i;
+                        newField.id = newField.name;
+                        newField.value = val1;
+                        div.appendChild(newField);
+
+                        document.getElementById('resourcespace_csv_form').insertBefore(div, addHeaderButton);
+                    }
+
+                    if(i >= window.header_id) {
+                        window.header_id = i + 1;
+                    }
+                }
+            } else {
+                break;
+            }
+            i++;
         }
     }
 
@@ -61,8 +221,38 @@
 
         var extraInfo = document.getElementById("form_extraInfo");
         inputs = extraInfo.getElementsByTagName("input");
+        var index = 0;
         for (i = 0; i < inputs.length; i++) {
-            document.cookie = "extraInfo_" + i + "=" + inputs[i].checked;
+            if(inputs[i].type != "text" && !(/^extraInfo_custom_[0-9]+.*$/.test(inputs[i].name))) {
+                document.cookie = "extraInfo_" + index + "_name=" + inputs[i].value;
+                index++;
+            }
+        }
+        i = 100;
+        while(true) {
+            var ele = document.getElementById("extraInfo_custom_" + i);
+            if(ele != null) {
+                var ele1 = document.getElementById("extraInfo_custom_" + i + "_name");
+                if(ele1 != null) {
+                    document.cookie = "extraInfo_" + i + "=" + ele.checked;
+                    document.cookie = "extraInfo_" + i + "_name=" + ele1.value;
+                }
+            } else {
+                break;
+            }
+            i++;
+        }
+        i = 0;
+        while(true) {
+            var headerInput = document.getElementById('match_csv_header_' + i);
+            var fieldInput = document.getElementById('match_csv_field_' + i);
+            if(headerInput != null && fieldInput != null) {
+                document.cookie = "match_csv_header_" + i + "=" + headerInput.value;
+                document.cookie = "match_csv_field_" + i + "=" + fieldInput.value;
+            } else {
+                break;
+            }
+            i++;
         }
     }
 
@@ -78,6 +268,7 @@
                 return c.substring(name.length, c.length);
             }
         }
-        return "";
+        return null;
     }
+
 </script>

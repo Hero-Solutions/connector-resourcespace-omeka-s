@@ -9,6 +9,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -23,8 +24,12 @@ class ResourceSpaceCsvController extends AbstractController
         set_time_limit(0);
         $csvImport = new CsvImport();
         $params = $this->container->get('parameter_bag');
-        $form = $this->createFormBuilder($csvImport)
-            ->add('imageType', ChoiceType::class, [ 'label' => 'Gewenst afbeeldingstype', 'choices' => $params->get('image_types') ])
+        $matchheaders = array();
+
+        $form = $this->createFormBuilder($csvImport, [ 'attr' => ['id' => 'resourcespace_csv_form' ]])
+            ->add('username', TextType::class, [ 'label' => 'ResourceSpace gebruikersnaam', 'data' => $this->getParameter('resourcespace_api')['username']])
+            ->add('key', TextType::class, [ 'label' => 'ResourceSpace API key', 'required' => false, 'empty_data' => '', 'attr' => [ 'placeholder' => 'Leeg laten voor default username & API key', 'autocomplete' => 'off' ]])
+            ->add('imageType', ChoiceType::class, [ 'label' => 'Gewenst afbeeldingstype', 'choices' => $params->get('image_types')])
             ->add('extraColumns', ChoiceType::class, [ 'label' => 'Extra rij/kolom per afbeelding:', 'expanded' => true, 'multiple' => false, 'choices' => [ 'Extra rij' => false, 'Extra kolom' => true ]])
             ->add('imageCount', ChoiceType::class, [ 'label' => false, 'expanded' => true, 'multiple' => true, 'choices' => [ 'Tel aantal resultaten (label "Matches")' => true ]])
             ->add('extraInfo', ChoiceType::class, [ 'label' => 'Voeg extra ResourceSpace velden toe:', 'expanded' => true, 'multiple' => true, 'choices' => array_merge(['ResourceSpace ID' => 'resourcespace_id'], $params->get('csv_fields'))])
@@ -42,7 +47,39 @@ class ResourceSpaceCsvController extends AbstractController
             $imageCount = $csvImport->getImageCount();
             $extraInfo = $csvImport->getExtraInfo();
             $resourceSpace = new ResourceSpace($params);
-            $omekaSCsvFields = $params->get('omeka_s_csv_fields');
+            if($csvImport->getUsername() != $resourceSpace->getApiUsername()) {
+                $resourceSpace->setApiUsername($csvImport->getUsername());
+            }
+            if(!empty($csvImport->getKey())) {
+                $resourceSpace->setApiKey($csvImport->getKey());
+            }
+            $maxResults = $this->getParameter('csv_max_results');
+            $extraInfoHeaders = array();
+
+            $i = 100;
+            while(true) {
+                if($request->get('extraInfo_custom_' . $i . '_name') != null) {
+                    if($request->get('extraInfo_custom_' . $i) != null) {
+                        $key = $request->get('extraInfo_custom_' . $i . '_name');
+                        $extraInfo[] = $key;
+                        $extraInfoHeaders[] = $key;
+                    }
+                } else {
+                    break;
+                }
+                $i++;
+            }
+            $i = 0;
+            while(true) {
+                if ($request->get('match_csv_header_' . $i) != null) {
+                    if ($request->get('match_csv_field_' . $i) != null) {
+                        $matchheaders[$request->get('match_csv_header_' . $i)] = $request->get('match_csv_field_' . $i);
+                    }
+                } else {
+                    break;
+                }
+                $i++;
+            }
 
             $fh = fopen($file, 'r');
             $records = array();
@@ -56,40 +93,42 @@ class ResourceSpaceCsvController extends AbstractController
                 $line = array_combine($header, $row);
                 $fileUrls = array();
                 $metadata = array();
-                foreach ($omekaSCsvFields as $columnName => $resourceSpaceName) {
+                foreach ($matchheaders as $columnName => $resourceSpaceName) {
                     if(array_key_exists($columnName, $line)) {
                         if(!empty($line[$columnName])) {
                             $results = $resourceSpace->findResource($resourceSpaceName . ':' . $line[$columnName], '0');
-                            foreach ($results as $result) {
-                                $data = array();
-                                $resourceData = null;
-                                foreach ($extraInfo as $field) {
-                                    if ($field == 'resourcespace_id') {
-                                        $data[$field] = $result['ref'];
-                                    } else {
-                                        if ($resourceData == null) {
-                                            $resourceData = $resourceSpace->getResourceMetadata($result['ref']);
-                                        }
-                                        if (array_key_exists($field, $resourceData)) {
-                                            $data[$field] = $resourceData[$field];
+                            if (count($results) <= $maxResults) {
+                                foreach ($results as $result) {
+                                    $data = array();
+                                    $resourceData = null;
+                                    foreach ($extraInfo as $field) {
+                                        if ($field == 'resourcespace_id') {
+                                            $data[$field] = $result['ref'];
                                         } else {
-                                            $data[$field] = '';
+                                            if ($resourceData == null) {
+                                                $resourceData = $resourceSpace->getResourceMetadata($result['ref']);
+                                            }
+                                            if (array_key_exists($field, $resourceData)) {
+                                                $data[$field] = $resourceData[$field];
+                                            } else {
+                                                $data[$field] = '';
+                                            }
                                         }
                                     }
+                                    $metadata[] = $data;
+                                    $fileUrl = $resourceSpace->getResourcePath($result['ref'], $imageType, 0);
+                                    if (empty($fileUrl) || !HttpUtil::urlExists($fileUrl)) {
+                                        $fileUrl = $resourceSpace->getResourcePath($result['ref'], '', 0, $result['file_extension']);
+                                    }
+                                    if (!empty($fileUrl)) {
+                                        $fileUrls[] = $fileUrl;
+                                    } else {
+                                        $fileUrls[] = '';
+                                    }
                                 }
-                                $metadata[] = $data;
-                                $fileUrl = $resourceSpace->getResourcePath($result['ref'], $imageType, 0);
-                                if (empty($fileUrl) || !HttpUtil::urlExists($fileUrl)) {
-                                    $fileUrl = $resourceSpace->getResourcePath($result['ref'], '', 0, $result['file_extension']);
+                                if (!empty($results)) {
+                                    break;
                                 }
-                                if (!empty($fileUrl)) {
-                                    $fileUrls[] = $fileUrl;
-                                } else {
-                                    $fileUrls[] = '';
-                                }
-                            }
-                            if (!empty($results)) {
-                                break;
                             }
                         }
                     }
@@ -155,6 +194,9 @@ class ResourceSpaceCsvController extends AbstractController
                     $header[] = $key;
                 }
             }
+            foreach($extraInfoHeaders as $key) {
+                $header[] = $key;
+            }
             $header[] = 'Media';
             if($extraColumns) {
                 for ($i = 0; $i < $maxCount - 1; $i++) {
@@ -182,6 +224,7 @@ class ResourceSpaceCsvController extends AbstractController
 
         return $this->render('csv_import.html.twig', [
             'form' => $form->createView(),
+            'match_headers' => $params->get('omeka_s_csv_fields'),
             'search_results' => $searchResults
         ]);
     }

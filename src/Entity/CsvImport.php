@@ -5,6 +5,8 @@ namespace App\Entity;
 class CsvImport
 {
     protected $file;
+    protected $username;
+    protected $key;
     protected $imageType;
     protected $extraColumns;
     protected $imageCount;
@@ -18,6 +20,25 @@ class CsvImport
     public function setFile($file): void
     {
         $this->file = $file;
+    }
+    public function getUsername() : string
+    {
+        return $this->username;
+    }
+
+    public function setUsername($username)
+    {
+        $this->username = $username;
+    }
+
+    public function getKey() : string
+    {
+        return $this->key;
+    }
+
+    public function setKey($key)
+    {
+        $this->key = $key;
     }
 
     public function getImageType()
